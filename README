@@ -1,0 +1,17 @@
+Welcome to the rejection miner!
+
+Please note that at the moment the miner is in a prototype state, meant as a companion to the paper "Weighing the Pros and Cons: Process Discovery with Negative Examples".
+
+To try the miner for yourself, simply download the repository and open one of the html files in your browser. 
+
+The tools have been thoroughly tested in Chrome Version 84.0.4147.89, but no issues with other modern browsers are expected.
+
+The different html files are as follows:
+- index.html: a start page with links to the other pages.
+- mining.html: implements the main rejection miner, supports loading either a single XES log, or a zip file containing multiple such logs.
+- kfold.html: a highly experimental tool for performing k-fold validation with the miner. The default setting is 10 (randomized) runs with k=10, as reported in the paper.
+- cleaning.html: a highly experimental tool for transforming the DCR Solutions log format into XES and fully anonymizing the source log.
+- dreyers.html: a highly experimental tool for transforming the original logformay provided for the Dreyer case into XES with labelled positive and negative examples.
+
+
+ 

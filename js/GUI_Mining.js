@@ -35,7 +35,9 @@ class GUI_Mining
 
     renderOnce()
     {
-        var result = `<input type="file" id="log" name="log" onChange="document.MiningGUI.loadLogFile()" />`;                
+        var result = ``
+        result +=  `Please select a XES logfile, or a zip file containing multiple logs: `
+        result +=  `<input type="file" id="log" name="log" onChange="document.MiningGUI.loadLogFile()" />`;                
         result +=  `<div id="mining-details"></div>`                
         this.mainPanel.innerHTML = result;
         this.panel = document.getElementById("mining-details");        
@@ -61,13 +63,12 @@ class GUI_Mining
         {        
             this.miner = new Miner(this.logFile.logs[0]);
         }
-
-        this.panel.innerHTML = "Mining..."
         console.time('Mining...')
         this.miner.mine();
         console.timeEnd('Mining...')
         this.render();        
     }  
+
 
     loadZip(f)
     {      
@@ -118,7 +119,7 @@ class GUI_Mining
     }
 
     loadLogFile() {
-        this.panel.innerHTML = "Loading..."
+        this.panel.innerHTML = "Loading & mining... (May take a while, please be patient and keep your window active!)"
         var x = document.getElementById("log");
         if (x.files.size == 0)
             return;

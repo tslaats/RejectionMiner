@@ -432,10 +432,10 @@ class MultiMiner
           <th>Negative traces</th>          
           <th>Positive traces</th>          
           <th>Rejected negative traces</th>
-          <th>Specificity</th>              
+          <th>TPR (Recall)</th>              
+          <th>TNR (Specificity)</th>              
           <th>Accuracy</th>              
-          <th>Constraints in greedy model</th>          
-          <th>Estimated cost of greedy model</th>  
+          <th>Constraints in greedy model</th>                    
         </tr>`;        
 
         this.miners.sort(function(b, a){return a.log.negativeTraceCount - b.log.negativeTraceCount});
@@ -449,10 +449,11 @@ class MultiMiner
             <td>${m.log.negativeTraceCount}</td>
             <td>${m.log.positiveTraceCount}</td>
             <td>${m.supports.length}</td>
-            <td>${(m.log.negativeTraceCount !== 0) ? (m.supports.length / m.log.negativeTraceCount) * 100 : 100}%</td>            
-            <td>${(m.log.negativeTraceCount !== 0) ? ((m.supports.length + m.log.positiveTraceCount) / (m.log.negativeTraceCount + m.log.positiveTraceCount)) * 100 : 100}%</td>            
+            <td>1</td>
+            <td>${(m.log.negativeTraceCount !== 0) ? (m.supports.length / m.log.negativeTraceCount) : 1}</td>            
+            <td>${(m.log.negativeTraceCount !== 0) ? ((m.supports.length + m.log.positiveTraceCount) / (m.log.negativeTraceCount + m.log.positiveTraceCount)): 1}</td>            
             <td>${m.greedyModel.size}</td>                        
-            <td>${m.costOf(m.greedyModel)}</td>`                        
+            `                        
             result += `</tr>`;
 
             totalNegativeTraceCount += m.log.negativeTraceCount;
@@ -471,10 +472,11 @@ class MultiMiner
         <td>${totalNegativeTraceCount}</td>
         <td>${totalPositiveTraceCount}</td>
         <td>${totalSupport}</td>
-        <td>${(totalNegativeTraceCount !== 0) ? (totalSupport / totalNegativeTraceCount) * 100 : 100}%</td>            
-        <td>${(totalNegativeTraceCount !== 0) ? ((totalSupport + totalPositiveTraceCount) / (totalNegativeTraceCount +totalPositiveTraceCount)) * 100 : 100}%</td>            
-        <td>${totalConstraints}</td>            
-        <td>${totalCost}</td>`            
+        <td>1</td>
+        <td>${(totalNegativeTraceCount !== 0) ? (totalSupport / totalNegativeTraceCount) : 1}</td>            
+        <td>${(totalNegativeTraceCount !== 0) ? ((totalSupport + totalPositiveTraceCount) / (totalNegativeTraceCount +totalPositiveTraceCount)) : 1}</td>            
+        <td>${totalConstraints}</td>                    
+        `
         result += `</tr>`;
         result += `</table>`;
         return result;
@@ -988,20 +990,24 @@ class Miner
         var gm = this.greedyModel;
         var usgm = this.unsoundGreedyModel;
 
-        var result = `<table class="resultTable">
+        var result = ``;
+
+        result += `Results for the Greedy Minimizer (GM): </br>`
+
+        result += `<table class="resultTable">
         <tr>
           <th>Type</th>
           <th>Activity 1</th>          
           <th>Activity 2</th>          
-          <th>Support</th>
-          <th>Contradictions</th>
+          <th>Support (Results in True Negatives)</th>
+          <th>Contradictions (Results in False Negatives)</th>
         </tr>`;
         for (let r of this.results())
         {
-            if (gm.has(r) || usgm.has(r))
+            if (gm.has(r))
             {
                 result += `  <tr>
-                <td>${r.type} ${(gm.has(r)) ? " USED" : ""} ${(usgm.has(r)) ? " USGM" : ""} </td>
+                <td>${r.type}</td>
                 <td>${r.a}</td>
                 <td>${(r.b !== undefined) ? r.b : "N/A"}</td>
                 <td>${r.support}</td>
@@ -1011,6 +1017,33 @@ class Miner
         }
 
         result += `</table>`;
+
+        result += `</br></br>`
+        result += `Results for the Unsound Greedy Minimizer (allows less than perfect recall if accuracy can thereby be improved): </br>`
+
+        result += `<table class="resultTable">
+        <tr>
+          <th>Type</th>
+          <th>Activity 1</th>          
+          <th>Activity 2</th>          
+          <th>Support (Results in True Negatives)</th>
+          <th>Contradictions (Results in False Negatives)</th>
+        </tr>`;
+        for (let r of this.results())
+        {
+            if (usgm.has(r))
+            {
+                result += `  <tr>
+                <td>${r.type}</td>
+                <td>${r.a}</td>
+                <td>${(r.b !== undefined) ? r.b : "N/A"}</td>
+                <td>${r.support}</td>
+                <td>${r.contradictions}</td>`            
+                result += `</tr>`;
+            }
+        }
+
+        result += `</table>`;        
 
 
         var tset = new Set();
@@ -1041,12 +1074,15 @@ class Miner
         usgmSup = tset.size;
         usgmCon = tset2.size;
 
+        result += `</br></br>`
+
         result += `<table class="modelsTable">
         <tr>
           <th>Type</th>
-          <th>Recall</th>          
-          <th>Specificity</th>          
+          <th>TPR (Recall)</th>          
+          <th>TNR (Specificity)</th>          
           <th>Accuracy</th>
+          <th>Balanced Accuracy</th>
           <th>Precision</th>
           <th>F1</th>
           <th>ModelSize</th>
@@ -1063,16 +1099,44 @@ class Miner
         var F1 = 2 * ((PPV * TPR) / (PPV + TPR));
         var TNR = (TN / (TN + FP));
         var ACC = ((TP + TN) / (TP + FP + FN + TN));
-        
+        var BACC = ((TPR + TNR) / (2));
+        var size = gmSize;
+
         result += `  <tr>
         <td>GM</td>
         <td>${TPR}</td>
         <td>${TNR}</td>
         <td>${ACC}</td>        
+        <td>${BACC}</td>      
         <td>${PPV}</td>
         <td>${F1}</td>
-        <td>${gmSize}</td>`            
+        <td>${size}</td>`            
         result += `</tr>`;
+
+
+        TP = this.log.positiveTraceCount - usgmCon;        
+        FN = usgmCon;        
+        FP = this.log.negativeTraceCount - usgmSup;        
+        TN = usgmSup;
+        PPV = (TP / (TP + FP));
+        TPR = (TP / (TP + FN));
+        F1 = 2 * ((PPV * TPR) / (PPV + TPR));
+        TNR = (TN / (TN + FP));
+        ACC = ((TP + TN) / (TP + FP + FN + TN));
+        BACC = ((TPR + TNR) / (2));
+        size = usgmSize;
+
+        result += `  <tr>
+        <td>UGM</td>
+        <td>${TPR}</td>
+        <td>${TNR}</td>
+        <td>${ACC}</td>      
+        <td>${BACC}</td>        
+        <td>${PPV}</td>
+        <td>${F1}</td>
+        <td>${size}</td>`            
+        result += `</tr>`;
+
 
         result += `</table>`;
 
