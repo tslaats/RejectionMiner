@@ -640,15 +640,15 @@ class Miner
                     
                     if (!contains[i])
                         if(!before[i].includes(id))
-                            before[i] += id;
+                            before[i].push(id);
 
                     if (contains[i])                            
                         if(!after[i].includes(id))
-                            after[i] += id;
+                            after[i].push(id);
 
                     if (contains[i])                            
                         if(!afterFirst[i].includes(id))
-                            afterFirst[i] += id;                                                        
+                            afterFirst[i].push(id);                                                        
                 }           
                 after[id] = [];     
             }
@@ -657,15 +657,22 @@ class Miner
             var seen = [];
             for (var j of this.activityIDToName.keys())
             {                
-                if (!contains[j])   
-                    out += j;
-                else
-                    seen += j;
+                if (!contains[j])                       
+                    out.push(j);
+                else                    
+                    seen.push(j);
+                    
             }                
-             
+            
+            /*
+            if (t.conceptName == "14b-304_P")
+            {
+                console.log(JSON.stringify(seen));            
+                console.log(JSON.stringify(out));                            
+            }*/
 
             for (var x1 of seen)
-            {
+            {           
                 for (var x2 of out)
                 {
                     if (t.isNegative()) 
